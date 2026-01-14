@@ -143,7 +143,12 @@ def plot_3d_motion(save_path, kinematic_tree, joints, title, dataset, figsize=(3
         ax.dist = 7.5
         _title = title + f' [{index}]'
         if cond is not None and 'heading_print' in cond.keys():
-            _title += ' [{}]'.format(cond['heading_print'][index])
+            heading_val = cond['heading_print']
+            # Handle case where heading_print is a scalar (single sample)
+            if np.isscalar(heading_val):
+                _title += ' [{}]'.format(heading_val)
+            else:
+                _title += ' [{}]'.format(heading_val[index])
         if cond is not None and 'joint_names' in cond.keys():
             _title += ' {}'.format(cond['joint_names'])
         fig.suptitle(_title, fontsize=10)

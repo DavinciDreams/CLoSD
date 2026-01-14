@@ -45,7 +45,20 @@ class AutoRegressiveSampler():
         bs = shape[0]
         n_iterations = (self.required_frames // self.args.pred_len) + 1
         samples_buf = []
-        cur_prefix = deepcopy(kargs['model_kwargs']['y']['prefix'])  # init with data
+        # Handle case where prefix is not provided (e.g., text-to-motion generation)
+        if 'prefix' in kargs['model_kwargs']['y']:
+            cur_prefix = deepcopy(kargs['model_kwargs']['y']['prefix'])  # init with data
+        else:
+            # Initialize prefix with zeros of appropriate shape
+            prefix_shape = list(shape)
+            prefix_shape[-1] = self.args.context_len
+            # Get device from model or from tensor values in model_kwargs
+            device = model.device if hasattr(model, 'device') else 'cpu'
+            for v in kargs['model_kwargs']['y'].values():
+                if torch.is_tensor(v):
+                    device = v.device
+                    break
+            cur_prefix = torch.zeros(prefix_shape, device=device)
         if self.args.autoregressive_include_prefix:
             samples_buf.append(cur_prefix)
         autoregressive_shape = list(deepcopy(shape))
